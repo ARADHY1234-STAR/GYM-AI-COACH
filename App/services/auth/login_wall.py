@@ -277,4 +277,9 @@ def render_login_wall():
         st.session_state["username"] = user["username"]
         st.rerun()
 
+    if submit_button:
+        st.write("Username:", username)
+        user, status = get_or_create_user(username.strip(), password.strip())
+    st.write("Status:", status)
+    
     return False
