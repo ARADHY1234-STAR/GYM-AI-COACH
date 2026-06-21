@@ -54,15 +54,15 @@ def create_user(username: str):
     try:
         with conn:
             conn.execute(
-                "INSERT INTO users (username) VALUES (?)",
+                "INSERT OR IGNORE INTO users (username) VALUES (?)",
                 (username,)
             )
 
         return get_user(username)
 
     except Exception as e:
-        st.error(f"DATABASE ERROR: {str(e)}")
-        raise
+        st.error(f"Error creating user: {e}")
+        return None
 
 
 def get_or_create_user(username: str) -> sqlite3.Row:
