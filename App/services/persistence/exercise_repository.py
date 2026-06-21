@@ -1,8 +1,12 @@
 import sqlite3
 import streamlit as st
 from pathlib import Path
+import hashlib
 
 _DB_PATH = "/tmp/data.db"
+
+def _hash(password: str) -> str:
+    return hashlib.sha256(password.strip().encode()).hexdigest()
 
 
 def _get_connection() -> sqlite3.Connection:
@@ -18,9 +22,10 @@ def init_db() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                username   TEXT UNIQUE NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                username      TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
@@ -41,36 +46,42 @@ def init_db() -> None:
 
 def get_user(username: str) -> sqlite3.Row:
     conn = _get_connection()
-
     return conn.execute(
         "SELECT * FROM users WHERE username = ?", (username,)
     ).fetchone()
 
 
-def create_user(username: str):
+def create_user(username: str, password: str):
     conn = _get_connection()
+    hashed = _hash(password)
 
     try:
         with conn:
             conn.execute(
-                "INSERT OR IGNORE INTO users (username) VALUES (?)",
-                (username,)
+                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                (username, hashed)
             )
-
-        return get_user(username)
+        return get_user(username), "created"
 
     except Exception as e:
         st.error(f"Error creating user: {e}")
-        return None
+        return None, "error"
 
 
-def get_or_create_user(username: str) -> sqlite3.Row:
+def get_or_create_user(username: str, password: str):
     user = get_user(username)
 
     if user is None:
-        user = create_user(username)
-    
-    return user
+        # New user — register them
+        return create_user(username, password)
+
+    elif user["password_hash"] == _hash(password):
+        # Existing user — correct password
+        return user, "login"
+
+    else:
+        # Existing user — wrong password
+        return None, "wrong_password"
 
 
 def add_exercise(user_id, exercise_name, reps, sets, time):

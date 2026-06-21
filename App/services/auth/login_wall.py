@@ -259,15 +259,20 @@ def render_login_wall():
                 "Username",
                 placeholder="e.g. Aradhy Shrivastava",
             )
+            password = st.text_input("Password / PIN", type="password", placeholder="Choose a password")
             submit_button = st.form_submit_button("⚡  Begin Training")
 
         st.markdown('<p class="foot-note">No password needed · Progress saved automatically</p>', unsafe_allow_html=True)
 
     if submit_button:
-        if not username.strip():
-            st.error("Username cannot be empty.")
+        if not username.strip() or not password.strip():
+            st.error("Username and password cannot be empty.")
             return False
-        user = get_or_create_user(username.strip())
+        user, status = get_or_create_user(username.strip(), password.strip())
+        
+        if status == "wrong_password":
+            st.error("Incorrect password. Please try again.")
+            return False
         st.session_state["user_id"] = user["id"]
         st.session_state["username"] = user["username"]
         st.rerun()
