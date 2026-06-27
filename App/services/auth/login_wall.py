@@ -10,7 +10,7 @@ def render_login_wall():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
 
-    #MainMenu, header, footer { visibility: hidden; }
+     header { visibility: hidden; }
     .block-container {
         padding: 0 !important;
         max-width: 100% !important;
@@ -277,10 +277,5 @@ def render_login_wall():
         st.session_state["username"] = user["username"]
         st.rerun()
 
-    if submit_button:
-        st.write("Username:", username)
-        user, status = get_or_create_user(username.strip(), password.strip())
-    status = status if 'status' in dir() else "unknown"
-    st.write("Status:", status)
 
     return False
