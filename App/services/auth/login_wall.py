@@ -280,6 +280,7 @@ def render_login_wall():
     if submit_button:
         st.write("Username:", username)
         user, status = get_or_create_user(username.strip(), password.strip())
+    status = status if 'status' in dir() else "unknown"
     st.write("Status:", status)
-    
+
     return False
